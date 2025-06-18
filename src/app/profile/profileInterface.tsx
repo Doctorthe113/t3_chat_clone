@@ -42,6 +42,7 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 import { useDropzone } from "react-dropzone";
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 type User =
     | {
@@ -75,6 +76,7 @@ export default function ProfileInterface({
     const [isNewAvatar, setIsNewAvatar] = useState(false);
     const [isNewAvatarSaving, setIsNewAvatarSaving] = useState(false);
     const ffmpegRef = useRef<FFmpeg | null>(null);
+    const router = useRouter();
 
     const accountSchema = z
         .object({
@@ -310,7 +312,7 @@ export default function ProfileInterface({
                 <Button
                     variant={"link"}
                     className="mb-10 flex items-center hover:cursor-pointer"
-                    onClick={() => window.history.back()}
+                    onClick={() => router.back()}
                 >
                     <ChevronLeft /> Go back
                 </Button>
@@ -500,11 +502,21 @@ export default function ProfileInterface({
                                                         {...field}
                                                     />
                                                 </FormControl>
+                                                <FormDescription>
+                                                    You can pass other
+                                                    information about you
+                                                    followed by your name as
+                                                    well. Example:{" "}
+                                                    <code className="text-xs">
+                                                        John; Age 22; Profession
+                                                        Engineer
+                                                    </code>
+                                                </FormDescription>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
-                                    <FormField
+                                    {/* <FormField
                                         control={customizationForm.control}
                                         name="borderRadius"
                                         render={({ field }) => (
@@ -530,7 +542,7 @@ export default function ProfileInterface({
                                                 <FormMessage />
                                             </FormItem>
                                         )}
-                                    />
+                                    /> */}
                                     <FormField
                                         control={customizationForm.control}
                                         name="customCssVariables"

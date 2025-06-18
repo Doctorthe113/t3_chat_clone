@@ -34,19 +34,23 @@ export default async function Chatroom({
             id: message.id,
             user: message.author,
             message: message.content,
+            file: message.file,
         };
     });
 
-    const chatrooms = (
-        await prisma.user.findUnique({
-            where: {
-                id: userId,
-            },
-            include: {
-                chatrooms: true,
-            },
-        })
-    )?.chatrooms;
+    let chatrooms;
+    try {
+        chatrooms = (
+            await prisma.user.findUnique({
+                where: {
+                    id: userId,
+                },
+                include: {
+                    chatrooms: true,
+                },
+            })
+        )?.chatrooms;
+    } catch {}
 
     let currentChatroomName = "";
     chatrooms?.forEach((chatroom) => {

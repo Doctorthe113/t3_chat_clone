@@ -16,16 +16,19 @@ export default async function Chatroom() {
     const userId = sessions?.user.id;
     const prisma = new PrismaClient();
 
-    const chatrooms = (
-        await prisma.user.findUnique({
-            where: {
-                id: userId,
-            },
-            include: {
-                chatrooms: true,
-            },
-        })
-    )?.chatrooms;
+    let chatrooms;
+    try {
+        chatrooms = (
+            await prisma.user.findUnique({
+                where: {
+                    id: userId,
+                },
+                include: {
+                    chatrooms: true,
+                },
+            })
+        )?.chatrooms;
+    } catch {}
 
     prisma.$disconnect();
 

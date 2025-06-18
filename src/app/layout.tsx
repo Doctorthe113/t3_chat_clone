@@ -3,6 +3,7 @@ import { Pixelify_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/themeProvide";
 import { cookies } from "next/headers";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const customFont = Pixelify_Sans({
     subsets: ["latin"],
@@ -29,10 +30,6 @@ export default async function RootLayout({
                 <meta name="darkreader-lock" />
             </head>
             <body className={`${customFont.variable} antialiased`}>
-                <script
-                    crossOrigin="anonymous"
-                    src="//unpkg.com/react-scan/dist/auto.global.js"
-                />
                 {!!customCssVars && (
                     <style
                         dangerouslySetInnerHTML={{

@@ -21,15 +21,32 @@ type Message = {
     id: string;
     user: string;
     message: string;
+    file?: string;
 };
 
-const convertMessageToContent = (
-    message: Message
-): OpenAI.Chat.Completions.ChatCompletionMessageParam => {
-    return {
-        content: message.message,
-        role: message.user as any,
-    };
+const convertMessageToContent = (message: Message): any => {
+    if (message.file) {
+        return {
+            role: message.user as "user" | "assistant", // Cast user to valid OpenAI role
+            content: [
+                {
+                    type: "text",
+                    text: message.message,
+                },
+                {
+                    type: "image_url",
+                    image_url: {
+                        url: message.file, // Assuming `message.file` already contains the base64 URL
+                    },
+                },
+            ],
+        };
+    } else {
+        return {
+            role: message.user as "user" | "assistant", // Cast user to valid OpenAI role
+            content: message.message,
+        };
+    }
 };
 
 app.prepare()
@@ -59,6 +76,7 @@ app.prepare()
                     model,
                     thinkingEffort,
                     systemInstruction,
+                    nickname,
                     CustomApiKey
                 ) => {
                     let messageSent = false;
@@ -70,8 +88,11 @@ app.prepare()
                         model,
                         thinkingEffort,
                         systemInstruction,
+                        nickname,
                         CustomApiKey
                     );
+
+                    console.log(data);
 
                     // saves the intial message to the database before sending
                     if (user !== null) {
@@ -79,6 +100,7 @@ app.prepare()
                             id: data[data.length - 1].id,
                             content: data[data.length - 1].message,
                             author: data[data.length - 1].user,
+                            file: data[data.length - 1].file,
                             chatroomId: room,
                         };
 

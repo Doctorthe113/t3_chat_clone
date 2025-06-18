@@ -18,6 +18,7 @@ import { socket } from "@/lib/socket";
 import { PlusCircle, Trash, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { warn } from "console";
+import { CustomTooltip } from "@/components/ui/customTooltip";
 
 type Chatrooms = {
     id: string;
@@ -130,7 +131,7 @@ export default function ChatroomSidebar({
                 </SidebarGroup>
                 <SidebarGroup>
                     <SidebarGroupLabel>Old messages</SidebarGroupLabel>
-                    <SidebarMenu>
+                    <SidebarMenu className="overflow-x-clip">
                         {chatrooms?.map((chatroom) => (
                             <SidebarMenuButton
                                 key={chatroom.id}
@@ -142,52 +143,60 @@ export default function ChatroomSidebar({
                             >
                                 <Link
                                     href={`/chat/${chatroom.id}`}
+                                    prefetch={true}
                                     className="whitespace-nowrap overflow-hidden h-full w-full overflow-ellipsis hover:no-underline flex items-center"
                                 >
                                     <span className="whitespace-nowrap overflow-hidden overflow-ellipsis">
                                         {chatroom.name}
                                     </span>
                                 </Link>
-                                <Button
-                                    className="absolute right-1 group-hover/item:opacity-100 opacity-0 size-6 bg-sidebar transition-all duration-300"
-                                    variant="destructive"
-                                    onClick={(e) => delete_room(e, chatroom.id)}
-                                >
-                                    <Trash />
-                                </Button>
+                                <CustomTooltip text="Delete room?">
+                                    <Button
+                                        className="absolute -right-6 group-hover/item:right-1 group-hover/item:opacity-100 opacity-0 size-6 bg-sidebar transition-[right,opacity] duration-250"
+                                        variant="destructive"
+                                        onClick={(e) =>
+                                            delete_room(e, chatroom.id)
+                                        }
+                                    >
+                                        <Trash />
+                                    </Button>
+                                </CustomTooltip>
                             </SidebarMenuButton>
                         ))}
                     </SidebarMenu>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarFooter className="p-2 py-4 border-b-0 rounded-b-none flex justify-center items-center m-0 min-h-24">
+            <SidebarFooter className="py-4 border-b-0 rounded-b-none flex justify-center items-center m-0 min-h-24">
                 {user ? (
-                    <Link
-                        href={`/profile`}
-                        className="p-0 m-0 h-full w-full flex items-center hover:no-underline hover:bg-input/50 rounded-lg"
-                    >
-                        <div className="flex items-start w-full h-fit p-2 gap-2 rounded-lg">
-                            {user?.image ? (
-                                <img
-                                    src={user?.image as string}
-                                    alt=""
-                                    width={64}
-                                    height={64}
-                                    className="size-10 rounded-lg overflow-clip"
-                                />
-                            ) : (
-                                <User className="size-10 rounded-lg border-1 overflow-clip" />
-                            )}
-                            <div className="flex h-full flex-col items-center">
-                                <span className="w-full text-primary">
-                                    {user?.name}
-                                </span>
-                                <span className="text-xs w-full overflow-ellipsis text-wrap">
-                                    {user?.email}
-                                </span>
+                    <CustomTooltip text="Profile/settings">
+                        <Link
+                            href={`/profile`}
+                            prefetch={true}
+                            className="p-2 m-0 h-full w-full flex items-center hover:no-underline hover:bg-input/50 rounded-lg"
+                        >
+                            <div className="flex items-start w-full h-fit gap-2 rounded-lg">
+                                {user?.image ? (
+                                    <img
+                                        src={user?.image as string}
+                                        alt=""
+                                        width={64}
+                                        height={64}
+                                        className="size-10 rounded-lg overflow-clip"
+                                    />
+                                ) : (
+                                    <User className="size-10 rounded-lg border-1 overflow-clip" />
+                                )}
+                                <div className="flex h-full flex-col items-center">
+                                    <span className="w-full text-primary">
+                                        {user?.name}
+                                    </span>
+                                    <span className="text-xs w-full overflow-ellipsis text-wrap">
+                                        {user?.email}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                    </Link>
+                        </Link>
+                    </CustomTooltip>
                 ) : (
                     <Link
                         href={`/login`}
