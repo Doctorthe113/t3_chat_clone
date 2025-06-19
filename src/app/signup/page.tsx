@@ -24,26 +24,39 @@ import { fetchFile } from "@ffmpeg/util";
 import { authClient } from "@/lib/auth-client";
 
 // zod schema
-const formSchema = z.object({
-    username: z
-        .string()
-        .min(2, {
-            message: "Username must be at least 2 characters long",
-        })
-        .max(32, {
-            message: "Username must be at most 16 characters long",
-        }),
-    email: z.string().email(),
-    password: z
-        .string()
-        .min(8, {
-            message: "Password must be at least 8 characters long",
-        })
-        .max(64, {
-            message: "Password must be at most 64 characters long",
-        }),
-    avatar: z.string().url().optional(), // base64 data url
-});
+const formSchema = z
+    .object({
+        username: z
+            .string()
+            .min(2, {
+                message: "Username must be at least 2 characters long",
+            })
+            .max(32, {
+                message: "Username must be at most 16 characters long",
+            }),
+        email: z.string().email(),
+        password: z
+            .string()
+            .min(8, {
+                message: "Password must be at least 8 characters long",
+            })
+            .max(64, {
+                message: "Password must be at most 64 characters long",
+            }),
+        confirmPassword: z
+            .string()
+            .min(8, {
+                message: "Password must be at least 8 characters long",
+            })
+            .max(64, {
+                message: "Password must be at most 64 characters long",
+            }),
+        avatar: z.string().url().optional(), // base64 data url
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+    });
 
 export default function Signin() {
     const [avatarUrl, setAvatarUrl] = useState<string>(
@@ -59,6 +72,7 @@ export default function Signin() {
             username: "",
             email: "",
             password: "",
+            confirmPassword: "",
         },
     });
 
@@ -329,6 +343,27 @@ export default function Signin() {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Password</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="password"
+                                            placeholder="********"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>
+                                        Make sure your password is at least 8
+                                        characters long.
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Confirm Password</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="password"

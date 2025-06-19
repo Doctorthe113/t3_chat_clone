@@ -15,9 +15,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { socket } from "@/lib/socket";
-import { PlusCircle, Trash, User } from "lucide-react";
+import { PlusCircle, Trash2, User } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { warn } from "console";
 import { CustomTooltip } from "@/components/ui/customTooltip";
 
 type Chatrooms = {
@@ -158,7 +157,7 @@ export default function ChatroomSidebar({
                                             delete_room(e, chatroom.id)
                                         }
                                     >
-                                        <Trash />
+                                        <Trash2 />
                                     </Button>
                                 </CustomTooltip>
                             </SidebarMenuButton>
@@ -186,7 +185,7 @@ export default function ChatroomSidebar({
                                 ) : (
                                     <User className="size-10 rounded-lg border-1 overflow-clip" />
                                 )}
-                                <div className="flex h-full flex-col items-center">
+                                <div className="flex h-full grow flex-col items-center">
                                     <span className="w-full text-primary">
                                         {user?.name}
                                     </span>

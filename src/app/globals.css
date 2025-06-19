@@ -46,6 +46,7 @@
     --radius-xl: calc(var(--radius) + 4px);
     --font-serif: Georgia, serif;
     --font-custom: var(--font-custom);
+    --font-cursive: var(--font-cursive);
     --radius: 0.25rem;
     --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
     --tracking-tight: calc(var(--tracking-normal) - 0.025em);
@@ -228,6 +229,12 @@
 
     #markdown-content strong code {
         @apply !text-sm !font-normal;
+    }
+
+    ol {
+        list-style: decimal;
+        list-style-position: inside;
+        @apply pl-2;
     }
 }
 

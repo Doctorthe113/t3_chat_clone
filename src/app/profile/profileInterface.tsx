@@ -24,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { literal, z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, Trash, User } from "lucide-react";
+import { ChevronLeft, Trash, Twitter, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import Cookies from "js-cookie";
 import { DarkModeSwitch } from "@/components/ui/darkmodeSwitch";
@@ -43,6 +43,9 @@ import { fetchFile } from "@ffmpeg/util";
 import { useDropzone } from "react-dropzone";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { HugeiconsGithub } from "@/assets/github";
+import { HugeiconsNewTwitter } from "@/assets/twitter";
 
 type User =
     | {
@@ -77,6 +80,14 @@ export default function ProfileInterface({
     const [isNewAvatarSaving, setIsNewAvatarSaving] = useState(false);
     const ffmpegRef = useRef<FFmpeg | null>(null);
     const router = useRouter();
+
+    const templateCssVars = `
+    --background: #181825;
+    --foreground: #cdd6f4;
+    --card: #1e1e2e;
+    --radius: 4px;`
+        .trim()
+        .replaceAll("    ", "");
 
     const accountSchema = z
         .object({
@@ -121,7 +132,6 @@ export default function ProfileInterface({
 
     const customizationSchema = z.object({
         nickname: z.string().optional(),
-        borderRadius: z.number().optional(),
         customCssVariables: z.string().optional(),
     });
 
@@ -129,18 +139,9 @@ export default function ProfileInterface({
         resolver: zodResolver(customizationSchema),
         defaultValues: {
             nickname: "",
-            borderRadius: 4,
             customCssVariables: "",
         },
     });
-
-    const templateCssVars = `
-    --background: #181825;
-    --foreground: #cdd6f4;
-    --card: #1e1e2e;
-    --card-foreground: #cdd6f4;`
-        .trim()
-        .replaceAll("    ", "");
 
     const apiSchema = z.object({
         apiKey: z.string().optional(),
@@ -194,9 +195,6 @@ export default function ProfileInterface({
         data: z.infer<typeof customizationSchema>
     ) => {
         localStorage.setItem("nickname", data.nickname as string);
-        Cookies.set("borderRadius", `${data.borderRadius}` as string, {
-            expires: 365,
-        });
         Cookies.set("themeCssVars", data.customCssVariables as string, {
             expires: 365,
         });
@@ -217,6 +215,7 @@ export default function ProfileInterface({
         localStorage.removeItem("apiKey");
         localStorage.removeItem("systemPrompt");
     };
+
     const uuidV7ToDate = (uuidv7String: string) => {
         const cleanUuid = uuidv7String.replace(/-/g, "");
         const timestampHex = cleanUuid.substring(0, 12);
@@ -243,6 +242,18 @@ export default function ProfileInterface({
                     chatrooms.filter((room) => room.id !== id)
                 );
             }
+        } catch (e) {}
+    };
+
+    const logout = async () => {
+        try {
+            await authClient.signOut({
+                fetchOptions: {
+                    onSuccess: () => {
+                        router.push("/chat");
+                    },
+                },
+            });
         } catch (e) {}
     };
 
@@ -308,7 +319,7 @@ export default function ProfileInterface({
 
     return (
         <div className="h-full w-full max-w-3xl flex gap-4 justify-center pt-40">
-            <Card className="w-64 h-fit flex flex-col items-center gap-3 bg-transparent border-0 shadow-none py-0 px-4">
+            <Card className="w-64 min-h-full flex flex-col items-center gap-3 bg-transparent border-0 shadow-none py-0 px-4">
                 <Button
                     variant={"link"}
                     className="mb-10 flex items-center hover:cursor-pointer"
@@ -362,6 +373,9 @@ export default function ProfileInterface({
                         {isNewAvatarSaving ? "Saving..." : "Update"}
                     </Button>
                 )}
+                <Button variant={"link"} className="mt-auto" onClick={logout}>
+                    Log out
+                </Button>
             </Card>
             <div>
                 <Tabs defaultValue="account">
@@ -516,33 +530,6 @@ export default function ProfileInterface({
                                             </FormItem>
                                         )}
                                     />
-                                    {/* <FormField
-                                        control={customizationForm.control}
-                                        name="borderRadius"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    Base corner/border radius
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="number"
-                                                        placeholder="4"
-                                                        {...field}
-                                                        onChange={(e) => {
-                                                            field.onChange(
-                                                                Number(
-                                                                    e.target
-                                                                        .value
-                                                                )
-                                                            );
-                                                        }}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    /> */}
                                     <FormField
                                         control={customizationForm.control}
                                         name="customCssVariables"
@@ -693,6 +680,14 @@ export default function ProfileInterface({
                             <CardHeader className="p-0">
                                 <CardTitle>Contact me</CardTitle>
                             </CardHeader>
+                            <div className="flex gap-4">
+                                <Link href="https://x.com/Doctorthe113">
+                                    <HugeiconsNewTwitter className="size-8 border rounded-lg p-1 hover:opacity-60 text-primary" />
+                                </Link>
+                                <Link href="https://github.com/doctorthe113">
+                                    <HugeiconsGithub className="size-8 border rounded-lg p-1 hover:opacity-60 text-primary" />
+                                </Link>
+                            </div>
                         </Card>
                     </TabsContent>
                     <TabsContent value="history">

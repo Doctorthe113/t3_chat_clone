@@ -4,11 +4,10 @@ import { Server } from "socket.io";
 import { generate, generate_title } from "@/lib/generate";
 import generateUUID from "@/lib/randomUUID";
 import { PrismaClient } from "@prisma/client";
-import { OpenAI } from "openai/client";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
-const port = 3000;
+const port = dev ? 3000 : 3002;
 const app = next({
     dev: dev,
     hostname: hostname,
@@ -24,29 +23,55 @@ type Message = {
     file?: string;
 };
 
-const convertMessageToContent = (message: Message): any => {
+const convertMessageToContent = (message: Message, provider: string): any => {
+    const contentParts: any[] = [
+        {
+            type: "text",
+            text: message.message,
+        },
+    ];
+
     if (message.file) {
-        return {
-            role: message.user as "user" | "assistant", // Cast user to valid OpenAI role
-            content: [
-                {
-                    type: "text",
-                    text: message.message,
-                },
-                {
-                    type: "image_url",
-                    image_url: {
-                        url: message.file, // Assuming `message.file` already contains the base64 URL
+        // Extract MIME type from the base64 URL
+        const mimeMatch = message.file.match(/^data:(.*?);base64,/);
+        const mimeType = mimeMatch ? mimeMatch[1] : "";
+
+        if (provider === "openai") {
+            if (mimeType === "application/pdf") {
+                contentParts.push({
+                    type: "file",
+                    file: {
+                        filename: "file.pdf",
+                        file_data: message.file,
                     },
+                });
+            } else if (mimeType.startsWith("image/")) {
+                contentParts.push({
+                    type: "file", // As requested, wrapped in 'file' type for images too
+                    image_url: {
+                        url: message.file,
+                    },
+                });
+            }
+            // For OpenAI, if file is present but not PDF or image, it will not be added to contentParts.
+        } else if (provider === "google") {
+            // For Google, the same structure is applied for both PDF and image
+            contentParts.push({
+                type: "file",
+                image_url: {
+                    url: message.file,
                 },
-            ],
-        };
-    } else {
-        return {
-            role: message.user as "user" | "assistant", // Cast user to valid OpenAI role
-            content: message.message,
-        };
+            });
+        }
+        // If the provider is neither "openai" nor "google",
+        // or if it's OpenAI but the file type is not recognized as PDF/image,
+        // the file will not be included in the content parts, strictly following the new rules.
     }
+
+    return {
+        role: message.user as "user" | "assistant",
+        content: contentParts,
+    };
 };
 
 app.prepare()
@@ -82,17 +107,6 @@ app.prepare()
                     let messageSent = false;
                     let message = "";
                     const resultId = generateUUID();
-                    const response = await generate(
-                        data.map(convertMessageToContent),
-                        provider,
-                        model,
-                        thinkingEffort,
-                        systemInstruction,
-                        nickname,
-                        CustomApiKey
-                    );
-
-                    console.log(data);
 
                     // saves the intial message to the database before sending
                     if (user !== null) {
@@ -124,6 +138,18 @@ app.prepare()
 
                     // sends the ai content and edits the message as it generates
                     try {
+                        const response = await generate(
+                            data.map((message) =>
+                                convertMessageToContent(message, provider)
+                            ),
+                            provider,
+                            model,
+                            thinkingEffort,
+                            systemInstruction,
+                            nickname,
+                            CustomApiKey
+                        );
+
                         //@ts-ignore
                         for await (const chunk of response) {
                             message += chunk.choices[0].delta?.content || "";
@@ -147,7 +173,11 @@ app.prepare()
                             }
                         }
                     } catch (error) {
-                        console.error("Error sending message:", error);
+                        console.log(error);
+                        io.to(room).emit(
+                            "error",
+                            "Error generating the content, refresh the page"
+                        );
                     }
 
                     // for updating data to the database

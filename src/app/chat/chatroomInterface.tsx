@@ -16,13 +16,15 @@ import "ldrs/react/Quantum.css";
 import {
     CornerDownLeft,
     Lightbulb,
-    MoveRight,
     Sparkles,
     Trash,
+    Trash2,
 } from "lucide-react";
 //@ts-ignore
 import { dracula as dark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { CustomTooltip } from "@/components/ui/customTooltip";
+import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Message = {
     id: string;
@@ -57,7 +59,7 @@ export default function ChatroomInterface({
     const [isGenerating, setIsGenerating] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
     const [inputFile, setInputFile] = useState("");
-    const [apiKey, setApiKey] = useState(localStorage.getItem("apiKey"));
+    const [apiKey, setApiKey] = useState("");
     const [model, setModel] = useState({
         name: "gemini-2.5-flash-preview-05-20",
         provider: "gemini",
@@ -208,12 +210,54 @@ export default function ChatroomInterface({
     };
 
     // handleFileInput
-    const handleFileInput = async (e: any) => {
-        const file = e.target.files[0];
-        const base64: any = await encodeFileToBase64(file);
-        if (base64) {
-            setInputFile(base64.base64);
+    const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+
+        if (!file) {
+            return;
         }
+
+        const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+            handleError("File size exceeds 10MB limit.");
+            e.target.value = ""; // Clear the input
+            return;
+        }
+
+        if (
+            !file.type.startsWith("image/") &&
+            file.type !== "application/pdf"
+        ) {
+            handleError("Unsupported file type.");
+            e.target.value = ""; // Clear the input
+            return;
+        }
+
+        try {
+            const base64 = await encodeFileToBase64(file);
+            if (base64) {
+                setInputFile(base64.base64);
+            }
+        } catch (error) {
+            console.error("Error encoding file to base64:", error);
+            handleError("Failed to process file.");
+            e.target.value = ""; // Clear the input
+        }
+    };
+
+    // error handler
+    const handleError = (error: any) => {
+        setIsGenerating(false);
+        toast(error, { className: "!text-sidebar !bg-destructive" });
+    };
+
+    // capitalize first letter
+    const capitalizeFirstLetter = (string: string) => {
+        if (!string) {
+            return "";
+        }
+        return string.charAt(0).toUpperCase() + string.slice(1);
     };
 
     // saves model information in the local storage
@@ -320,9 +364,8 @@ export default function ChatroomInterface({
         socket.on("disconnect", onDisconnect);
         socket.on("message", recieve_message);
         socket.on("edit", recieved_edit_message);
+        socket.on("error", handleError);
         socket.emit("join", roomId);
-
-        document.getElementById("chat-text-area")?.focus();
 
         setCustomConfigs({
             systemInstruction: localStorage.getItem("systemPrompt") || "",
@@ -330,8 +373,10 @@ export default function ChatroomInterface({
         });
 
         setModel(JSON.parse(localStorage.getItem("model") as string) || model);
-
+        setApiKey(localStorage.getItem("apiKey") || "");
         setIsLoaded(true);
+
+        document.getElementById("chat-text-area")?.focus();
 
         return () => {
             socket.off("connect", onConnect);
@@ -339,6 +384,7 @@ export default function ChatroomInterface({
             socket.off("message", recieve_message);
             socket.off("generate", () => setIsGenerating(true));
             socket.off("edit", recieved_edit_message);
+            socket.off("error", handleError);
         };
     }, []);
 
@@ -350,54 +396,195 @@ export default function ChatroomInterface({
                 ref={messageContainerRef}
             >
                 {messages.length === 0 && (
-                    <div className="flex w-full justify-center h-full items-center">
-                        <Card className="w-fit p-4 bg-sidebar/50 border-none">
-                            <h1 className="text-xl font-bold text-primary">
+                    <div
+                        className={`flex w-full justify-center h-full items-center transition-all duration-1000 fade-in`}
+                    >
+                        <Card className="w-fit min-w-lg p-4 bg-transparent border-none shadow-none">
+                            <h1 className="text-2xl font-bold text-primary">
                                 How can I help you
-                                {user?.id ? `, ${user?.name}` : ""}?
+                                <span className="font-cursive font-normal text-3xl italic">
+                                    {user?.id
+                                        ? `, ${capitalizeFirstLetter(
+                                              user?.name
+                                          )}?`
+                                        : "?"}
+                                </span>
                             </h1>
-                            <div className="flex gap-2 items-center text-muted-foreground">
-                                <MoveRight className="size-4" />
-                                <Button
-                                    onMouseDown={update_textarea}
-                                    variant="link"
-                                    className="p-0 m-0 text-left flex justify-start border-b-1 grow text-muted-foreground"
-                                >
-                                    Write me a poem about love
-                                </Button>
-                            </div>
-                            <div className="flex gap-2 items-center text-muted-foreground">
-                                <MoveRight className="size-4" />
-                                <Button
-                                    onMouseDown={update_textarea}
-                                    variant="link"
-                                    className="p-0 m-0 text-left flex justify-start border-b-1 grow text-muted-foreground"
-                                >
-                                    Write me a story about a brave warrior
-                                </Button>
-                            </div>
-                            <div className="flex gap-2 items-center text-muted-foreground">
-                                <MoveRight className="size-4" />
-                                <Button
-                                    onMouseDown={update_textarea}
-                                    variant="link"
-                                    className="p-0 m-0 text-left flex justify-start border-b-1 grow text-muted-foreground"
-                                >
-                                    Tell about impacts of shipment and aviation
-                                    on global warming
-                                </Button>
-                            </div>
-                            <div className="flex gap-2 items-center text-muted-foreground">
-                                <MoveRight className="size-4" />
-                                <Button
-                                    onMouseDown={update_textarea}
-                                    variant="link"
-                                    className="p-0 m-0 text-left flex justify-start border-b-1 grow text-muted-foreground"
-                                >
-                                    Explain low level network architecture in
-                                    *unix systems
-                                </Button>
-                            </div>
+                            <Tabs defaultValue="Casual">
+                                <TabsList className="!bg-transparent w-full">
+                                    <TabsTrigger value="Casual">
+                                        Casual
+                                    </TabsTrigger>
+                                    <TabsTrigger value="Creative">
+                                        Creative
+                                    </TabsTrigger>
+                                    <TabsTrigger value="Code">Code</TabsTrigger>
+                                    <TabsTrigger value="Scientific">
+                                        Scientific
+                                    </TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="Casual">
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Rank countries by GDP in the year
+                                            2022
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Plan a weekend trip to the beach
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            What's the weather like today?
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Suggest a good movie to watch
+                                        </Button>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="Creative">
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Write me a poem about love
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Write me a story about a brave
+                                            warrior
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Compose a song about autumn leaves
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Generate a fictional creature
+                                            description
+                                        </Button>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="Code">
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Write a Python function for
+                                            quicksort
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Explain CSS Flexbox layout
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            How to connect to a MySQL database
+                                            in Node.js
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Debug a common JavaScript error
+                                        </Button>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="Scientific">
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Tell about impacts of shipment and
+                                            aviation on global warming
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Explain low level network
+                                            architecture in *unix systems
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            Describe the process of
+                                            photosynthesis
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 items-center text-muted-foreground mb-2.5">
+                                        <Button
+                                            onMouseDown={update_textarea}
+                                            variant="link"
+                                            className="p-0 m-0 text-left flex justify-start grow text-muted-foreground"
+                                        >
+                                            What are black holes and how do they
+                                            form?
+                                        </Button>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
                         </Card>
                     </div>
                 )}
@@ -423,6 +610,12 @@ export default function ChatroomInterface({
                                     <img
                                         src={message.file}
                                         alt={message.message}
+                                        width={200}
+                                        onError={(e: any) => {
+                                            e.target.onerror = null;
+                                            e.target.src =
+                                                "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.6sQOJxBJ3JVcQBYBKwzwOQHaHa%26r%3D0%26pid%3DApi&f=1&ipt=de3920beabeda48fd4b85de1718eb8a1d9de57295707f3a589c18f27743ee27d&ipo=images";
+                                        }}
                                         className="w-20 max-h-24 object-contain"
                                     />
                                 </div>
@@ -500,8 +693,29 @@ export default function ChatroomInterface({
             </div>
             <div className="h-max w-[calc(100%-1rem)] max-w-3xl bg-sidebar/50 backdrop-blur-lg border-primary/50 border-2 border-b-0 rounded-lg rounded-b-none p-2 mt-2 mx-1 flex-col flex items-center justify-between absolute bottom-0">
                 {inputFile && (
-                    <div className="max-h-24 h-fit w-18 bg-background mr-auto">
-                        <img src={inputFile} alt="" className="w-full" />
+                    <div className="max-h-24 h-fit w-18 bg-background mr-auto relative group/item">
+                        <img
+                            src={inputFile}
+                            alt=""
+                            width={200}
+                            onError={(e: any) => {
+                                e.target.onerror = null;
+                                e.target.src =
+                                    "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse3.mm.bing.net%2Fth%3Fid%3DOIP.6sQOJxBJ3JVcQBYBKwzwOQHaHa%26r%3D0%26pid%3DApi&f=1&ipt=de3920beabeda48fd4b85de1718eb8a1d9de57295707f3a589c18f27743ee27d&ipo=images";
+                            }}
+                            className="w-full"
+                        />
+                        <Button
+                            className="absolute top-0 right-0 h-full w-full hidden group-hover/item:flex justify-center items-center"
+                            variant={"destructive"}
+                            size="icon"
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                setInputFile("");
+                            }}
+                        >
+                            <Trash2 />
+                        </Button>
                     </div>
                 )}
                 <Textarea
@@ -519,17 +733,17 @@ export default function ChatroomInterface({
                     <input
                         id="file-input"
                         type="file"
-                        accept="image/*"
+                        accept="image/*,application/pdf"
                         className="hidden"
                         disabled={!isConnected || isGenerating || !!inputFile}
                         onChange={handleFileInput}
                     />
-                    <CustomTooltip text="Upload an image upto 10MB">
+                    <CustomTooltip text="Upload a pdf or image upto 10MB">
                         <Label
                             htmlFor="file-input"
                             className="border bg-input/30 flex items-center cursor-pointer rounded-lg mr-auto h-8 px-4 py-2 has-[>svg]:px-3 text-sm gap-2"
                         >
-                            Image Upload
+                            Upload
                         </Label>
                     </CustomTooltip>
                     <span className="flex items-center justify-center">

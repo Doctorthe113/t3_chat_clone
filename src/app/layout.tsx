@@ -1,15 +1,22 @@
-import type { Metadata } from "next";
-import { Pixelify_Sans } from "next/font/google";
-import "./globals.css";
 import { ThemeProvider } from "@/components/themeProvide";
+import type { Metadata } from "next";
+import { Norican, Pixelify_Sans } from "next/font/google";
 import { cookies } from "next/headers";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "sonner";
+import "./globals.css";
 
 const customFont = Pixelify_Sans({
     subsets: ["latin"],
     weight: ["400", "700"],
     variable: "--font-custom",
     fallback: ["system-ui", "sans-serif"],
+});
+
+const cursive = Norican({
+    subsets: ["latin"],
+    weight: ["400"],
+    variable: "--font-cursive",
+    fallback: ["system-ui", "sans"],
 });
 
 export const metadata: Metadata = {
@@ -29,7 +36,9 @@ export default async function RootLayout({
             <head>
                 <meta name="darkreader-lock" />
             </head>
-            <body className={`${customFont.variable} antialiased`}>
+            <body
+                className={`${customFont.variable} ${cursive.variable} antialiased`}
+            >
                 {!!customCssVars && (
                     <style
                         dangerouslySetInnerHTML={{
@@ -43,7 +52,18 @@ export default async function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                 >
-                    {children}
+                    <>{children}</>
+                    <Toaster
+                        expand={false}
+                        toastOptions={{
+                            className: "bg-popover !border-border",
+                            style: {
+                                background: "var(--color-popover)",
+                                color: "var(--color-popover-foreground)",
+                                width: "fit-content",
+                            },
+                        }}
+                    />
                 </ThemeProvider>
             </body>
         </html>
