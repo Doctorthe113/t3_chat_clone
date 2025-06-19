@@ -142,7 +142,6 @@ export default function ChatroomSidebar({
                             >
                                 <Link
                                     href={`/chat/${chatroom.id}`}
-                                    prefetch={true}
                                     className="whitespace-nowrap overflow-hidden h-full w-full overflow-ellipsis hover:no-underline flex items-center"
                                 >
                                     <span className="whitespace-nowrap overflow-hidden overflow-ellipsis">

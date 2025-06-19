@@ -10,6 +10,31 @@ import ChatroomSidebar from "../chatroomSidebar";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { PrismaClient } from "@prisma/client";
+import { cache } from "react";
+
+export const dynamic = "force-dynamic";
+
+const getMessages = cache(async (roomId: string) => {
+    const prisma = new PrismaClient();
+    const messages = await prisma.messages.findMany({
+        where: { chatroomId: roomId },
+        orderBy: { id: "asc" },
+    });
+    await prisma.$disconnect();
+    return messages;
+});
+
+const getUserChatrooms = cache(async (userId: string) => {
+    const prisma = new PrismaClient();
+    const chatrooms = (
+        await prisma.user.findUnique({
+            where: { id: userId },
+            include: { chatrooms: true },
+        })
+    )?.chatrooms;
+    await prisma.$disconnect();
+    return chatrooms;
+});
 
 export default async function Chatroom({
     params,
@@ -17,17 +42,9 @@ export default async function Chatroom({
     params: Promise<{ roomId: string }>;
 }) {
     const roomId: string = (await params).roomId;
-    const prisma = new PrismaClient();
     const sessions = await auth.api.getSession({ headers: await headers() });
     const userId = sessions?.user.id;
-    const dbResponse = await prisma.messages.findMany({
-        where: {
-            chatroomId: roomId,
-        },
-        orderBy: {
-            id: "asc",
-        },
-    });
+    const dbResponse = await getMessages(roomId);
 
     const oldMessages = dbResponse.map((message) => {
         return {
@@ -40,17 +57,10 @@ export default async function Chatroom({
 
     let chatrooms;
     try {
-        chatrooms = (
-            await prisma.user.findUnique({
-                where: {
-                    id: userId,
-                },
-                include: {
-                    chatrooms: true,
-                },
-            })
-        )?.chatrooms;
-    } catch {}
+        chatrooms = await getUserChatrooms(userId as string);
+    } catch (e) {
+        console.error("Failed to fetch user chatrooms:", e);
+    }
 
     let currentChatroomName = "";
     chatrooms?.forEach((chatroom) => {
@@ -58,8 +68,6 @@ export default async function Chatroom({
             currentChatroomName = chatroom.name;
         }
     });
-
-    prisma.$disconnect();
 
     return (
         <SidebarProvider className="pb-0 h-svh w-svw">
