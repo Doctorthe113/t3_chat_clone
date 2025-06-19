@@ -46,6 +46,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HugeiconsGithub } from "@/assets/github";
 import { HugeiconsNewTwitter } from "@/assets/twitter";
+import { toast } from "sonner";
 
 type User =
     | {
@@ -164,6 +165,7 @@ export default function ProfileInterface({
                     newPassword: data.newPassword,
                 });
                 accountForm.reset();
+                toast("Password changed successfully");
             } catch (e) {
                 accountForm.setError("newPassword", {
                     message: `Something went wrong ${e}`,
@@ -175,6 +177,7 @@ export default function ProfileInterface({
             try {
                 await authClient.updateUser({ name: data.username });
                 setUsername(data.username);
+                toast("Username changed successfully");
             } catch (e) {
                 accountForm.setError("username", {
                     message: `Something went wrong ${e}`,
@@ -204,6 +207,7 @@ export default function ProfileInterface({
         localStorage.removeItem("nickname");
         Cookies.remove("borderRadius");
         Cookies.remove("themeCssVars");
+        toast("Customization removed");
     };
 
     const onApiUpdate = async (data: z.infer<typeof apiSchema>) => {
@@ -214,6 +218,7 @@ export default function ProfileInterface({
     const onApiReset = () => {
         localStorage.removeItem("apiKey");
         localStorage.removeItem("systemPrompt");
+        toast("API key and system prompt removed");
     };
 
     const uuidV7ToDate = (uuidv7String: string) => {

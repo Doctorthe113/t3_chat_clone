@@ -76,7 +76,7 @@ export default async function Chatroom({
                 isNew={oldMessages.length > 0 ? false : true}
                 oldChatrooms={chatrooms as any}
             />
-            <SidebarInset className="!mb-0 !rounded-b-none !rounded-sm min-h-0 flex flex-col">
+            <SidebarInset className="!mb-0 !rounded-b-none !rounded-lg min-h-0 flex flex-col">
                 <div className="rounded-lg m-2 mb-0 grow flex flex-col p-0 min-h-0">
                     <header className="z-10 shadow-background group-has-data-[collapsible=icon]/sidebar-wrapper:h-8 flex h-8 shrink-0 items-center gap-2 transition-[width,height] ease-linear mb-2">
                         <SidebarTrigger />

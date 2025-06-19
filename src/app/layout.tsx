@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@/components/themeProvide";
 import type { Metadata } from "next";
-import { Norican, Pixelify_Sans } from "next/font/google";
+import { Merriweather, Norican, Pixelify_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -17,6 +17,13 @@ const cursive = Norican({
     weight: ["400"],
     variable: "--font-cursive",
     fallback: ["system-ui", "sans"],
+});
+
+const merriweather = Merriweather({
+    subsets: ["latin"],
+    weight: ["400", "700"],
+    variable: "--font-serif",
+    fallback: ["system-ui", "serif"],
 });
 
 export const metadata: Metadata = {
@@ -37,7 +44,7 @@ export default async function RootLayout({
                 <meta name="darkreader-lock" />
             </head>
             <body
-                className={`${customFont.variable} ${cursive.variable} antialiased`}
+                className={`${customFont.variable} ${cursive.variable} ${merriweather.variable} antialiased`}
             >
                 {!!customCssVars && (
                     <style

@@ -400,7 +400,7 @@ export default function ChatroomInterface({
                         className={`flex w-full justify-center h-full items-center transition-all duration-1000 fade-in`}
                     >
                         <Card className="w-fit min-w-lg p-4 bg-transparent border-none shadow-none">
-                            <h1 className="text-2xl font-bold text-primary">
+                            <h1 className="text-2xl font-bold text-primary font-serif">
                                 How can I help you
                                 <span className="font-cursive font-normal text-3xl italic">
                                     {user?.id
