@@ -331,9 +331,11 @@ export default function ProfileInterface({
                 <Button
                     variant={"link"}
                     className="mb-10 flex items-center hover:cursor-pointer"
-                    onClick={() => router.back()}
+                    onClick={() => {
+                        router.push("/chat");
+                    }}
                 >
-                    <ChevronLeft /> Go back
+                    <ChevronLeft /> Go back to /chat
                 </Button>
                 <div
                     {...getRootProps()}
