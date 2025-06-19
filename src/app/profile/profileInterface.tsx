@@ -191,7 +191,10 @@ export default function ProfileInterface({
             setIsNewAvatarSaving(true);
             await authClient.updateUser({ image: avatarUrl });
             setIsNewAvatarSaving(false);
-        } catch (e) {}
+        } catch (e) {
+            toast("Something went wrong");
+            console.log(e);
+        }
     };
 
     const onCustomizationUpdate = (
