@@ -83,7 +83,7 @@ export default function ChatroomInterface({
             "chat-text-area"
         ) as HTMLTextAreaElement;
 
-        if (textarea.value === "") {
+        if (textarea.value.trim() === "") {
             return;
         }
 
@@ -407,8 +407,9 @@ export default function ChatroomInterface({
                                         ? `, ${capitalizeFirstLetter(
                                               user?.name
                                           )}?`
-                                        : "?"}
+                                        : ""}
                                 </span>
+                                {user?.id ? "" : "?"}
                             </h1>
                             <Tabs defaultValue="Casual">
                                 <TabsList className="!bg-transparent w-full">

@@ -27,7 +27,7 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-    title: "Nocturne Chat - An open source chat app in your browser",
+    title: "Cosmic Chat - An open source chat app in your browser",
     description: "Open source T3 chat clone",
 };
 

@@ -109,7 +109,7 @@ export default function ChatroomSidebar({
                         className="font-custom text-2xl text-primary hover:underline"
                         href="/"
                     >
-                        Nocturne Chat
+                        Cosmic Chat
                     </Link>
                 </SidebarMenuItem>
             </SidebarHeader>
