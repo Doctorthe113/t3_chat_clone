@@ -1,0 +1,14 @@
+[Unit]
+Description=Campfire
+
+[Service]
+WorkingDirectory=/root/projects/t3_chat_clone
+ExecStart=/root/projects/t3_chat_clone/start.sh
+Restart=always
+User=root
+RestartSec=5s
+StandardOutput=append:/root/projects/t3_chat_clone/output.log
+StandardError=append:/root/projects/t3_chat_clone/errors.log
+
+[Install]
+WantedBy=multi-user.target
